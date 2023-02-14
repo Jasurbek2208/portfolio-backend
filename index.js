@@ -109,6 +109,9 @@ app.post("/portfolios", (req, res) => {
 });
 
 //
+app.get('*', (req, res) => {
+  res.sendFile(__dirname + "/index.html"); 
+})
 
 // Run the server and report out to the logs
 app.listen(4004, () => {

@@ -11,7 +11,56 @@
       <ul>
         <li><a href="/"> Home </a></li>
         <li><a href="/about"> About </a></li>
+        <li><a href="/auth/userme"> UserMe </a></li>
+        <li><a href="/auth/register"> Regsiter </a></li>
+        <li><a href="/auth/login"> Login </a></li>
+        <li>
+          <a href="/portfolios">
+            Portfolios (current time - users view page)
+          </a>
+        </li>
       </ul>
     </nav>
   </body>
+  <script>
+    const template = `
+        <br /><br /><br />
+        <nav>
+          <ul>
+            <li><a href="/"> Home </a></li>
+            <li><a href="/about"> About </a></li>
+            <li><a href="/auth/userme"> UserMe </a></li>
+            <li><a href="/auth/register"> Regsiter </a></li>
+            <li><a href="/auth/login"> Login </a></li>
+            <li><a href="/portfolios"> Portfolios (current time - users view page) </a></li>
+          </ul>
+        </nav>
+    `;
+
+    const routes = {
+      "/auth/register": () => {
+        document.body.innerHTML = `<h1>Register page</h1>` + template;
+      },
+      "/auth/login": () => {
+        document.body.innerHTML = `<h1>Login page</h1>` + template;
+      },
+      "/auth/userme": () => {
+        document.body.innerHTML = `<h1>UserME page</h1>` + template;
+      },
+      "/portfolios": () => {
+        document.body.innerHTML =
+          `<h1>Portfolios (current time - users view page)</h1>` + template;
+      },
+      "*": () => {
+        document.body.innerHTML = `<h1>Home page</h1>` + template;
+      },
+    };
+
+    window.onload = () => {
+      const path = window.location.pathname;
+      if (routes[path]) {
+        routes[path]();
+      }
+    };
+  </script>
 </html>
