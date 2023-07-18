@@ -67,24 +67,6 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-// Login
-app.post("/auth/login", (req, res) => {
-  const { name, password } = req.body;
-
-  if (users.find((user) => user.name === name && user.password === password)) {
-    let currentUser = users.find((user) => (user.name === name ? user : null));
-
-    res.json({
-      message: "success",
-      user: { _id: currentUser._id, name: currentUser.name },
-      token: currentUser.access_token,
-    });
-  } else {
-    res.status(401);
-    res.json({ message: "Invalid login or password." });
-  }
-});
-
 // Run the server and report out to the logs
 app.listen(2208, () => {
   console.log("Server started on port 2208");
