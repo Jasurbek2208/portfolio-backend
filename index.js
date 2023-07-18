@@ -85,25 +85,6 @@ app.post("/auth/login", (req, res) => {
   }
 });
 
-// UserME
-app.get("/auth/userme", (req, res) => {
-  const token = req.headers.authorization;
-
-  if (!token) {
-    res.status(400);
-    return res.json({ message: "Token not found in request headers." });
-  }
-
-  const currentUser = users.find((user) => user.access_token === token);
-  if (!currentUser) {
-    res.status(401);
-    return res.json({ message: "Unauthorized. Token not found in database." });
-  }
-
-  res.status(200);
-  return res.json({ user: { _id: currentUser._id, name: currentUser.name } });
-});
-
 // Run the server and report out to the logs
 app.listen(2208, () => {
   console.log("Server started on port 2208");
