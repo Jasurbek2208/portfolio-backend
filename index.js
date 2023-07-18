@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
@@ -109,80 +109,8 @@ app.get("/portfolios", (req, res) => {
   res.json(portfolios);
 });
 
-// POST Portfolios
-app.post("/portfolios", async (req, res) => {
-  const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
 
-  if (!token) {
-    res.status(400);
-    return res.json({ message: "Token not found in request headers." });
-
-  } else if(!isValidToken) {
-    res.status(401);
-    return res.json({ message: "Unauthorized. Token not found in database." });
-  }
-
-  if (!req?.body?.title) {
-    res.status(400);
-    return res.json('"title" is a required!');
-  }
-  if (!req?.body?.img) {
-    res.status(400);
-    return res.json('"img" is a required!');
-  }
-  if (!req?.body?.project_link) {
-    res.status(400);
-    return res.json('"project_link" is a required!');
-  }
-
-  const newPortfolio = await req.body;
-  portfolios.push({ ...newPortfolio, id: uuidv4() });
-
-  res.status(201);
-  res.json(portfolios);
+// Run the server and report out to the logs
+app.listen(2208, () => {
+  console.log("Server started on port 2208");
 });
-
-// PUT Current Portfolio
-app.put("/portfolio", async (req, res) => {
-  const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
-
-  if (!token) {
-    res.status(400);
-    return res.json({ message: "Token not found in request headers." });
-
-  } else if(!isValidToken) {
-    res.status(401);
-    return res.json({ message: "Unauthorized. Token not found in database." });
-  }
-
-  if (!req?.body?.id) {
-    res.status(404);
-    return res.json('Not Found!');
-  }
-  if (!req?.body?.title) {
-    res.status(400);
-    return res.json('"title" is a required!');
-  }
-  if (!req?.body?.img) {
-    res.status(400);
-    return res.json('"img" is a required!');
-  }
-  if (!req?.body?.project_link) {
-    res.status(400);
-    return res.json('"project_link" is a required!');
-  }
-
-  const postId = await req.body.id;
-  const editedPost = await req.body;
-
-  portfolios = portfolios.filter((post) => post.id !== postId);
-  portfolios.push(editedPost);
-
-  res.status(201);
-  res.json(portfolios);
-});
-
-// Export the Express app for serverless use
-module.exports = app;
