@@ -13,7 +13,7 @@ let portfolios = [];
 let users = [];
 
 // Register
-app.post("/auth/register", async (req, res) => {
+app.post("/auth/register", (req, res) => {
   let name = "";
   let password = "";
 
