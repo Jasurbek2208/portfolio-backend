@@ -16,6 +16,11 @@ const users = [];
 app.post("/auth/register", (req, res) => {
   const { name, password } = req.body;
 
+  if(!name || !password) {
+    res.status(300);
+    return res.json({ message: '"name" and "password" is required!' });
+  }
+  
   if (typeof name !== "string" || typeof password !== "string") {
     res.status(300);
     return res.json({
