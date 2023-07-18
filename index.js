@@ -107,7 +107,7 @@ app.get("/portfolios", (req, res) => {
 });
 
 // POST Portfolios
-app.post("/portfolios", async (req, res) => {
+app.post("/portfolios", (req, res) => {
   const token = req.headers.authorization;
   const isValidToken = users.find((user) => user.token === token);
 
@@ -122,18 +122,18 @@ app.post("/portfolios", async (req, res) => {
 
   if (!req?.body?.title) {
     res.status(400);
-    return res.json('"title" is a required!');
+    return res.json({ message: '"title" is a required!' });
   }
   if (!req?.body?.img) {
     res.status(400);
-    return res.json('"img" is a required!');
+    return res.json({ message: '"img" is a required!' });
   }
   if (!req?.body?.project_link) {
     res.status(400);
-    return res.json('"project_link" is a required!');
+    return res.json({ message: '"project_link" is a required!' });
   }
 
-  const newPortfolio = await req.body;
+  const newPortfolio = req.body;
   portfolios.push({ ...newPortfolio, id: uuidv4() });
 
   res.status(201);
