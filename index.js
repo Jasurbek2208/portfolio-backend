@@ -17,13 +17,8 @@ app.post("/auth/register", async (req, res) => {
   let name = "";
   let password = "";
 
-  try {
-    name = await req?.body?.name;
-    password = await req?.body?.password;
-  } catch {
-    res.status(300);
-    return res.json({ message: '"name" and "password" is required!' });
-  }
+  name = await req?.body?.name;
+  password = await req?.body?.password;
 
   if (typeof name !== "string" || typeof password !== "string") {
     res.status(300);
