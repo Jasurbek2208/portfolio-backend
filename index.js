@@ -108,13 +108,13 @@ app.get("/portfolios", (req, res) => {
 
 // POST Portfolios
 app.post("/portfolios", (req, res) => {
-  const { title, img, project_link } = req.body;
+  const { title, img, project_link, github_link } = req.body;
   const token = req?.headers?.authorization;
   const isValidToken = users.find((user) => user.token === token);
 
   
 
-  const newPortfolio = req.body;
+  const newPortfolio = { title, img, project_link, github_link };
   portfolios.push({ ...newPortfolio, id: uuidv4() });
 
   res.status(201);
