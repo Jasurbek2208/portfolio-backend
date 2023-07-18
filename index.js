@@ -92,7 +92,7 @@ app.get("/auth/userme", (req, res) => {
   }
 
   const currentUser = users.find((user) => user.access_token === token);
-  if (!currentUser.access_token) {
+  if (!currentUser) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
