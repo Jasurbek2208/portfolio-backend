@@ -143,46 +143,6 @@ app.post("/portfolios", async (req, res) => {
   res.json(portfolios);
 });
 
-// PUT Current Portfolio
-app.put("/portfolio", async (req, res) => {
-  const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
-
-  if (!token) {
-    res.status(400);
-    return res.json({ message: "Token not found in request headers." });
-
-  } else if (!isValidToken) {
-    res.status(401);
-    return res.json({ message: "Unauthorized. Token not found in database." });
-  }
-
-  if (!req?.body?.id) {
-    res.status(404);
-    return res.json('Not Found!');
-  }
-  if (!req?.body?.title) {
-    res.status(400);
-    return res.json('"title" is a required!');
-  }
-  if (!req?.body?.img) {
-    res.status(400);
-    return res.json('"img" is a required!');
-  }
-  if (!req?.body?.project_link) {
-    res.status(400);
-    return res.json('"project_link" is a required!');
-  }
-
-  const postId = await req.body.id;
-  const editedPost = await req.body;
-
-  portfolios = portfolios.filter((post) => post.id !== postId);
-  portfolios.push(editedPost);
-
-  res.status(201);
-  res.json(portfolios);
-});
 
 // Run the server and report out to the logs
 app.listen(4000, () => {
