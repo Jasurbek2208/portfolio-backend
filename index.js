@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const v4 = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 const app = express();
 
 app.use(cors());
@@ -13,7 +13,7 @@ let portfolios = [];
 let users = [];
 
 // Register
-app.post("/auth/register", (req, res) => {
+app.post("/auth/register", async (req, res) => {
   let name = "";
   let password = "";
 
@@ -25,7 +25,7 @@ app.post("/auth/register", (req, res) => {
   }
 
   if (typeof name !== "string" || typeof password !== "string") {
-    res.status(300);
+    res.status(400);
     return res.json({
       message: "The type of name and password must be String!",
     });
@@ -37,43 +37,50 @@ app.post("/auth/register", (req, res) => {
   }
 
   if (
-    name.length > 4 &&
-    name.length < 16 &&
-    password.length > 4 &&
-    password.length < 12
+    name.length < 4 ||
+    name.length > 16 ||
+    password.length < 4 ||
+    password.length > 12
   ) {
-    const user = {
-      name,
-      password,
-      _id: String(new Date().getTime()),
-      access_token:
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15),
-    };
-
-    users.push(user);
-
-    res.json({
-      message: "You have successfully registered.",
-      user: { _id: user._id, name: user.name },
-      token: user.access_token,
-    });
-  } else {
     res.status(401);
     return res.json({
       message:
         "Invalid requirement. 'name' must be at least 4 and at most 16 characters. The 'password' must be at least 4 and at most 12 characters long.",
     });
   }
+
+  const user = {
+    name,
+    password,
+    _id: String(new Date().getTime()),
+    access_token:
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15),
+  };
+
+  users.push(user);
+
+  res.status(201);
+  res.json({
+    message: "You have successfully registered.",
+    user: { _id: user._id, name: user.name },
+    token: user.access_token,
+  });
 });
 
 // Login
 app.post("/auth/login", (req, res) => {
   const { name, password } = req.body;
 
-  if (users.find((user) => user.name === name && user.password === password)) {
-    let currentUser = users.find((user) => (user.name === name ? user : null));
+  if (!name || !password) {
+    res.status(400);
+    return res.json({ message: "Invalid login or password." });
+  }
 
+  const currentUser = users.find((user) => user.name === name && user.password === password);
+
+  if (currentUser) {
+    res.status(200);
     res.json({
       message: "success",
       user: { _id: currentUser._id, name: currentUser.name },
@@ -95,92 +102,106 @@ app.get("/auth/userme", (req, res) => {
   }
 
   const currentUser = users.find((user) => user.access_token === token);
+
   if (!currentUser) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
 
   res.status(200);
-  return res.json({ user: { _id: currentUser._id, name: currentUser.name } });
+  res.json({ user: { _id: currentUser._id, name: currentUser.name } });
 });
 
 // GET Portfolios
 app.get("/portfolios", (req, res) => {
+  res.status(200);
   res.json(portfolios);
 });
 
 // POST Portfolios
 app.post("/portfolios", (req, res) => {
   const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
+  const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
     return res.json({ message: "Token not found in request headers." });
+  }
 
-  } else if (!isValidToken) {
+  if (!isValidToken) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
 
-  if (!req?.body?.title) {
+  const { title, img, project_link } = req.body;
+
+  if (!title || !img || !project_link) {
     res.status(400);
-    return res.json('"title" is a required!');
-  }
-  if (!req?.body?.img) {
-    res.status(400);
-    return res.json('"img" is a required!');
-  }
-  if (!req?.body?.project_link) {
-    res.status(400);
-    return res.json('"project_link" is a required!');
+    return res.json({
+      message: '"title", "img", and "project_link" are required fields!',
+    });
   }
 
-  const newPortfolio = req.body;
-  portfolios.push({ ...newPortfolio, id: v4() });
+  const newPortfolio = {
+    id: uuidv4(),
+    title,
+    img,
+    project_link,
+  };
+
+  portfolios.push(newPortfolio);
 
   res.status(201);
   res.json(portfolios);
 });
 
 // PUT Current Portfolio
-app.put("/portfolio", (req, res) => {
+app.put("/portfolios/:id", (req, res) => {
   const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
+  const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
     return res.json({ message: "Token not found in request headers." });
+  }
 
-  } else if (!isValidToken) {
+  if (!isValidToken) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
 
-  if (!req?.body?.id) {
+  const { id } = req.params;
+  const { title, img, project_link } = req.body;
+
+  if (!id) {
     res.status(404);
-    return res.json('Not Found!');
-  }
-  if (!req?.body?.title) {
-    res.status(400);
-    return res.json('"title" is a required!');
-  }
-  if (!req?.body?.img) {
-    res.status(400);
-    return res.json('"img" is a required!');
-  }
-  if (!req?.body?.project_link) {
-    res.status(400);
-    return res.json('"project_link" is a required!');
+    return res.json({ message: "Not Found!" });
   }
 
-  const postId = req.body.id;
-  const editedPost = req.body;
+  if (!title || !img || !project_link) {
+    res.status(400);
+    return res.json({
+      message: '"title", "img", and "project_link" are required fields!',
+    });
+  }
 
-  portfolios = portfolios.filter((post) => post.id !== postId);
-  portfolios.push(editedPost);
+  const portfolioIndex = portfolios.findIndex((portfolio) => portfolio.id === id);
 
-  res.status(201);
+  if (portfolioIndex === -1) {
+    res.status(404);
+    return res.json({ message: "Portfolio not found!" });
+  }
+
+  const editedPortfolio = {
+    id,
+    title,
+    img,
+    project_link,
+  };
+
+  portfolios[portfolioIndex] = editedPortfolio;
+
+  res.status(200);
   res.json(portfolios);
 });
 
