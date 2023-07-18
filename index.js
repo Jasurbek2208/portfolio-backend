@@ -13,14 +13,14 @@ let portfolios = [];
 const users = [];
 
 // Register
-app.post("/auth/register", (req, res) => {
+app.post("/auth/register", async (req, res) => {
   let name = "";
   let password = "";
 
   try {
-    name = req?.body?.name;
-    password = req?.body?.password;
-  } catch (error) {
+    name = await req?.body?.name;
+    password = await req?.body?.password;
+  } catch {
     res.status(300);
     return res.json({ message: '"name" and "password" is required!' });
   }
