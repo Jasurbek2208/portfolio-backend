@@ -109,7 +109,9 @@ app.get("/portfolios", (req, res) => {
 // POST Portfolios
 app.post("/portfolios", (req, res) => {
   const { title, img, project_link, github_link } = req.body;
-  const token = req?.headers?.authorization;
+  const token = req.headers.authorization;
+  const isValidToken = users.find((user) => user.token === token);
+
   portfolios.push({ title, img, project_link, github_link: github_link || null, id: uuidv4() });
 
   res.status(201);
