@@ -149,32 +149,29 @@ app.put("/portfolio", (req, res) => {
   if (!token) {
     res.status(400);
     return res.json({ message: "Token not found in request headers." });
-
-  } else if (!isValidToken) {
+  }
+  if (!isValidToken) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
-
   if (!id) {
     res.status(404);
-    return res.json('Not Found!');
+    return res.json({ message: 'Not Found!' });
   }
   if (!title) {
     res.status(400);
-    return res.json('"title" is a required!');
+    return res.json({ message: '"title" is a required!' });
   }
   if (!img) {
     res.status(400);
-    return res.json('"img" is a required!');
+    return res.json({ message: '"img" is a required!' });
   }
   if (!project_link) {
     res.status(400);
-    return res.json('"project_link" is a required!');
+    return res.json({ message: '"project_link" is a required!' });
   }
 
-  const postId = await req.body.id;
-
-  portfolios = portfolios.filter((post) => post.id !== postId);
+  portfolios = portfolios.filter((post) => post.id !== id);
   portfolios.push({ title, img, project_link, github_link, id });
 
   res.status(203);
