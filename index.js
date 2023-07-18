@@ -104,12 +104,6 @@ app.get("/auth/userme", (req, res) => {
   return res.json({ user: { _id: currentUser._id, name: currentUser.name } });
 });
 
-// GET Portfolios
-app.get("/portfolios", (req, res) => {
-  res.json(portfolios);
-});
-
-
 // Run the server and report out to the logs
 app.listen(2208, () => {
   console.log("Server started on port 2208");
