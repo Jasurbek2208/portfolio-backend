@@ -108,28 +108,29 @@ app.get("/portfolios", (req, res) => {
 
 // POST Portfolios
 app.post("/portfolios", (req, res) => {
-  const token = req.headers.authorization;
+  const { title, img, project_link } = req.body;
+  const token = req?.headers?.authorization;
   const isValidToken = users.find((user) => user.token === token);
 
   if (!token) {
     res.status(400);
     return res.json({ message: "Token not found in request headers." });
   }
-  
+
   if (!isValidToken) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
 
-  if (!req?.body?.title) {
+  if (!title) {
     res.status(400);
     return res.json({ message: '"title" is a required!' });
   }
-  if (!req?.body?.img) {
+  if (!img) {
     res.status(400);
     return res.json({ message: '"img" is a required!' });
   }
-  if (!req?.body?.project_link) {
+  if (!project_link) {
     res.status(400);
     return res.json({ message: '"project_link" is a required!' });
   }
