@@ -114,7 +114,7 @@ app.post("/portfolios", (req, res) => {
 
   
 
-  portfolios.push({ title, img, project_link, github_link: github_link || null, id: uuidv4() });
+  // portfolios.push({ title, img, project_link, github_link: github_link || null, id: uuidv4() });
 
   res.status(201);
   res.json({ message: "Post successfully added!", data: portfolios });
