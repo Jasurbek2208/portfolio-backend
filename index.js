@@ -10,18 +10,19 @@ app.use(express.json());
 let portfolios = [];
 
 // users
-let users = [];
+const users = [];
 
 // Register
-app.post("/auth/register", async (req, res) => {
+app.post("/auth/register", (req, res) => {
   let name = "";
   let password = "";
 
   try {
-    name = await req?.body?.name;
-    password = await req?.body?.password;
+    name = req?.body?.name;
+    password = req?.body?.password;
   } catch (error) {
-    console.log(error);
+    res.status(300);
+    return res.json({ message: '"name" and "password" is required!' });
   }
 
   if (typeof name !== "string" || typeof password !== "string") {
