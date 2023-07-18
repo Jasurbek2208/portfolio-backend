@@ -13,12 +13,8 @@ let portfolios = [];
 const users = [];
 
 // Register
-app.post("/auth/register", async (req, res) => {
-  let name = "";
-  let password = "";
-
-  name = await req?.body?.name;
-  password = await req?.body?.password;
+app.post("/auth/register", (req, res) => {
+  const { name, password } = req.body;
 
   if (typeof name !== "string" || typeof password !== "string") {
     res.status(300);
