@@ -110,28 +110,28 @@ app.get("/portfolios", (req, res) => {
 app.post("/portfolio", (req, res) => {
   const { title, img, project_link, github_link } = req.body;
   const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
+  const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
     return res.json({ message: "Token not found in request headers." });
 
-  } else if (!isValidToken) {
+  }
+  if (!isValidToken) {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
-
   if (!title) {
     res.status(400);
-    return res.json('"title" is a required!');
+    return res.json({ message: '"title" is a required!' });
   }
   if (!img) {
     res.status(400);
-    return res.json('"img" is a required!');
+    return res.json({ message: '"img" is a required!' });
   }
   if (!project_link) {
     res.status(400);
-    return res.json('"project_link" is a required!');
+    return res.json({ message: '"project_link" is a required!' });
   }
 
   portfolios.push({ title, img, project_link, github_link: github_link || null, id: uuidv4() });
