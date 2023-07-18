@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Registration Form</title>
+</head>
+<body>
+  <form id="registrationForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    // Function to handle form submission
+    const handleSubmit = (e) => {
+      e.preventDefault();
+
+      const form = document.getElementById('registrationForm');
+      const formData = new FormData(form);
+
+      fetch('http://localhost:4000/auth/register', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data); // Do something with the response data
+        })
+        .catch(error => {
+          console.error(error); // Handle any errors that occur during the request
+        });
+    };
+
+    // Add event listener to the form submit event
+    const form = document.getElementById('registrationForm');
+    form.addEventListener('submit', handleSubmit);
+  </script>
+</body>
+</html>

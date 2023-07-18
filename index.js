@@ -1,19 +1,28 @@
 const express = require("express");
 const cors = require("cors");
+const { v4: uuidv4 } = require("uuid");
 const app = express();
 
 app.use(cors());
-// app.use(express.json());
+app.use(express.json());
 
 // Portfolios
-const portfolios = [];
+let portfolios = [];
 
 // users
 let users = [];
 
 // Register
-app.post("/auth/register", (req, res) => {
-  const { name, password } = req.body;
+app.post("/auth/register", async (req, res) => {
+  let name = "";
+  let password = "";
+
+  try {
+    name = await req?.body?.name;
+    password = await req?.body?.password;
+  } catch (error) {
+    console.log(error);
+  }
 
   if (typeof name !== "string" || typeof password !== "string") {
     res.status(300);
@@ -101,9 +110,77 @@ app.get("/portfolios", (req, res) => {
 });
 
 // POST Portfolios
-app.post("/portfolios", (req, res) => {
-  const newPortfolio = req.body;
-  portfolios.push(newPortfolio);
+app.post("/portfolios", async (req, res) => {
+  const token = req.headers.authorization;
+  const isValidToken = users.find((user) => user.token === token);
+
+  if (!token) {
+    res.status(400);
+    return res.json({ message: "Token not found in request headers." });
+
+  } else if(!isValidToken) {
+    res.status(401);
+    return res.json({ message: "Unauthorized. Token not found in database." });
+  }
+
+  if (!req?.body?.title) {
+    res.status(400);
+    return res.json('"title" is a required!');
+  }
+  if (!req?.body?.img) {
+    res.status(400);
+    return res.json('"img" is a required!');
+  }
+  if (!req?.body?.project_link) {
+    res.status(400);
+    return res.json('"project_link" is a required!');
+  }
+
+  const newPortfolio = await req.body;
+  portfolios.push({ ...newPortfolio, id: uuidv4() });
+
+  res.status(201);
+  res.json(portfolios);
+});
+
+// PUT Current Portfolio
+app.put("/portfolio", async (req, res) => {
+  const token = req.headers.authorization;
+  const isValidToken = users.find((user) => user.token === token);
+
+  if (!token) {
+    res.status(400);
+    return res.json({ message: "Token not found in request headers." });
+
+  } else if(!isValidToken) {
+    res.status(401);
+    return res.json({ message: "Unauthorized. Token not found in database." });
+  }
+
+  if (!req?.body?.id) {
+    res.status(404);
+    return res.json('Not Found!');
+  }
+  if (!req?.body?.title) {
+    res.status(400);
+    return res.json('"title" is a required!');
+  }
+  if (!req?.body?.img) {
+    res.status(400);
+    return res.json('"img" is a required!');
+  }
+  if (!req?.body?.project_link) {
+    res.status(400);
+    return res.json('"project_link" is a required!');
+  }
+
+  const postId = await req.body.id;
+  const editedPost = await req.body;
+
+  portfolios = portfolios.filter((post) => post.id !== postId);
+  portfolios.push(editedPost);
+
+  res.status(201);
   res.json(portfolios);
 });
 
