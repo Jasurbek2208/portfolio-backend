@@ -108,11 +108,15 @@ app.get("/portfolios", (req, res) => {
 
 // POST Portfolios
 app.post("/portfolios", (req, res) => {
+  const token = req.headers.authorization;
+  const isValidToken = users.find((user) => user.token === token);
+
   const newPortfolio = req.body;
-  portfolios.push(newPortfolio);
+  portfolios.push({ ...newPortfolio, id: uuidv4() });
+
+  res.status(201);
   res.json(portfolios);
 });
-
 
 // Run the server and report out to the logs
 app.listen(2208, () => {
