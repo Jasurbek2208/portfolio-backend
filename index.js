@@ -18,8 +18,8 @@ app.post("/auth/register", async (req, res) => {
   let password = "";
 
   try {
-    name = await req?.body?.name;
-    password = await req?.body?.password;
+    name = req?.body?.name;
+    password = req?.body?.password;
   } catch (error) {
     console.log(error);
   }
@@ -136,7 +136,7 @@ app.post("/portfolios", (req, res) => {
     return res.json('"project_link" is a required!');
   }
 
-  const newPortfolio = await req.body;
+  const newPortfolio = req.body;
   portfolios.push({ ...newPortfolio, id: v4() });
 
   res.status(201);
@@ -174,8 +174,8 @@ app.put("/portfolio", (req, res) => {
     return res.json('"project_link" is a required!');
   }
 
-  const postId = await req.body.id;
-  const editedPost = await req.body;
+  const postId = req.body.id;
+  const editedPost = req.body;
 
   portfolios = portfolios.filter((post) => post.id !== postId);
   portfolios.push(editedPost);
