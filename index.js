@@ -134,7 +134,7 @@ app.post("/portfolios", (req, res) => {
   }
 
   const newPortfolio = req.body;
-  portfolios.push({ ...newPortfolio, id: uuidv4() });
+  portfolios.push(newPortfolio);
 
   res.status(201);
   res.json(portfolios);
