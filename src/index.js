@@ -1,17 +1,69 @@
-const express = require("express");
-const cors = require("cors");
-const { v4: uuidv4 } = require("uuid");
-const functions = require("firebase-functions")
+import { v4 as uuidv4 } from "uuid";
+import jwt from "jsonwebtoken"
+import express from "express";
+import config from "config"
+import cors from "cors";
+import fs from "fs";
+
 const app = express();
+const port = 9000;
 
 app.use(express.json());
 app.use(cors());
 
+// Secret Key for jwt
+const secretkey = config.get('SECRET_KEY')
+
 // Portfolios
-let portfolios = [];
+let portfolios = JSON.parse(JSON.stringify(config.get('PORTFOLIOS')));
 
 // users
-const users = [];
+const users = JSON.parse(JSON.stringify(config.get('USERS')));
+
+// Access Token generator
+function generateAccessToken(user) {
+  const payload = { ...user }
+
+  const options = { expiresIn: '1h' }
+
+  return jwt.sign(payload, secretkey, options)
+}
+
+// Update DB json
+function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
+  fs.readFile('config/default.json', 'utf8', (err, jsondata) => {
+    if (err) {
+      console.log(err)
+      return
+    }
+
+    try {
+      const data = JSON.parse(JSON.stringify(JSON.parse(jsondata)))
+
+      if (isupdate === "PUT") {
+        const newdatas = data?.[dbname].filter((item) => item.id !== currentid);
+        data[dbname] = [...newdatas, newdata]
+
+      } else if (isupdate === "DELETE") {
+        data[dbname] = newdata
+
+      } else {
+        data?.[dbname].push(newdata)
+      }
+
+      fs.writeFile('config/default.json', JSON.stringify(data), 'utf8', (error) => {
+        if (error) {
+          console.log("Error in rewriting default.json file: ", error);
+        } else {
+          console.log("Default.json file successfully rewrited!");
+        }
+      })
+
+    } catch (error) {
+      console.log("Error in updating default.json file: ", error);
+    }
+  })
+}
 
 // Register
 app.post("/auth/register", (req, res) => {
@@ -44,24 +96,28 @@ app.post("/auth/register", (req, res) => {
       name,
       password,
       _id: String(new Date().getTime()),
-      access_token:
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15),
-    };
+      access_token: null
+    }
 
-    users.push(user);
+    const access_token = generateAccessToken(user)
+    user.access_token = access_token
 
+    users.push(user)
+    updateDB('USERS', user)
+
+    res.status(201)
     res.json({
       message: "You have successfully registered.",
       user: { _id: user._id, name: user.name },
-      token: user.access_token,
+      access_token: user.access_token,
     });
+
   } else {
-    res.status(401);
+    res.status(401)
     return res.json({
       message:
         "Invalid requirement. 'name' must be at least 4 and at most 16 characters. The 'password' must be at least 4 and at most 12 characters long.",
-    });
+    })
   }
 });
 
@@ -72,14 +128,15 @@ app.post("/auth/login", (req, res) => {
   if (users.find((user) => user.name === name && user.password === password)) {
     let currentUser = users.find((user) => (user.name === name ? user : null));
 
+    res.status(200)
     res.json({
-      message: "success",
+      message: "Success",
       user: { _id: currentUser._id, name: currentUser.name },
-      token: currentUser.access_token,
-    });
+      access_token: currentUser.access_token,
+    })
   } else {
-    res.status(401);
-    res.json({ message: "Invalid login or password." });
+    res.status(401)
+    res.json({ message: "Invalid login or password." })
   }
 });
 
@@ -104,6 +161,7 @@ app.get("/auth/userme", (req, res) => {
 
 // GET Portfolios
 app.get("/portfolios", (req, res) => {
+  res.status(200);
   res.json(portfolios);
 });
 
@@ -135,17 +193,22 @@ app.post("/portfolio", (req, res) => {
     return res.json({ message: '"project_link" is a required!' });
   }
 
-  portfolios.push({ title, img, project_link, github_link: github_link || null, id: uuidv4() });
+  const portfolio = { title, img, project_link, github_link: github_link || null, id: uuidv4() }
+
+  updateDB('PORTFOLIOS', portfolio)
+  portfolios.push(portfolio);
 
   res.status(201);
-  res.json({ message: "Post successfully added!", data: portfolios });
+  res.json({ message: "Post successfully added!", data: portfolio });
 });
 
 // PUT Current Portfolio
-app.put("/portfolio", (req, res) => {
-  const { title, img, project_link, github_link, id } = req.body;
+app.put("/portfolio/:id", (req, res) => {
+  const id = req.params.id;
+  const { title, img, project_link, github_link } = req.body;
+
   const token = req.headers.authorization;
-  const isValidToken = users.find((user) => user.token === token);
+  const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
@@ -155,10 +218,17 @@ app.put("/portfolio", (req, res) => {
     res.status(401);
     return res.json({ message: "Unauthorized. Token not found in database." });
   }
+
   if (!id) {
     res.status(404);
-    return res.json({ message: 'Not Found!' });
+    return res.json({ message: 'Invaild "id"!' });
   }
+  
+  if (!portfolios.find((post) => post.id === id)) {
+    res.status(403);
+    return res.json({ message: `Post not found!` });
+  }
+
   if (!title) {
     res.status(400);
     return res.json({ message: '"title" is a required!' });
@@ -172,16 +242,51 @@ app.put("/portfolio", (req, res) => {
     return res.json({ message: '"project_link" is a required!' });
   }
 
-  portfolios = portfolios.filter((post) => post.id !== id);
-  portfolios.push({ title, img, project_link, github_link, id });
+  const portfolio = { title, img, project_link, github_link, id }
 
-  res.status(203);
-  res.json({ message: "Post successfully edited!", data: portfolios });
+  portfolios = portfolios.filter((post) => post.id !== id);
+
+  updateDB('PORTFOLIOS', portfolio, "PUT", id)
+  portfolios.push(portfolio);
+
+  res.status(200);
+  res.json({ message: "Post successfully edited!", data: portfolio });
 });
+
+app.delete('/portfolio/:id', (req, res) => {
+  const id = req.params.id
+  
+  const token = req.headers.authorization;
+  const isValidToken = users.find((user) => user.access_token === token);
+
+  if (!token) {
+    res.status(400);
+    return res.json({ message: "Token not found in request headers." });
+
+  }
+  if (!isValidToken) {
+    res.status(401);
+    return res.json({ message: "Unauthorized. Token not found in database." });
+  }
+  
+  if (!id) {
+    res.status(404);
+    return res.json({ message: 'Invaild "id"!' })
+  }
+  
+  if (!portfolios.find((post) => post.id === id)) {
+    res.status(403);
+    return res.json({ message: 'Post not found!' })
+  }
+
+  portfolios = portfolios.filter((post) => post.id !== id)
+  updateDB('PORTFOLIOS', portfolios, "DELETE", id)
+  
+  res.json({ message: 'Post successful deleted!' })
+  res.status(204)
+})
 
 // Run the server and report out to the logs
-app.listen(3000, () => {
-  console.log("Server started on port 3000");
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
 });
-
-exports.api = functions.https.onRequest(app);

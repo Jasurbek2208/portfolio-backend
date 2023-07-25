@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "Free backend server with CRUD methods for beginner frontend developers from Jasurbek Shomaqsudov!",
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
     "deploy": "firebase deploy --only functions"
   },
   "keywords": [
@@ -16,10 +18,11 @@
   "author": "Jasurbek Shomaqsudov",
   "license": "ISC",
   "dependencies": {
+    "config": "^3.3.9",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "firebase-admin": "^11.10.1",
-    "firebase-functions": "^4.4.1",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.1",
     "nodemon": "^3.0.1",
     "uuid": "^9.0.0"
   }
