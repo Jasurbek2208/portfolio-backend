@@ -16,10 +16,10 @@ app.use(cors());
 const secretkey = "kbticr7kmbrvjpm8ditjn4fhryt8pncqj8nvjyn5uox06cs3vf70l1f9ymhi4cvtr0ar28ea4jq2a264bth30dxef0ut2ve99y2dgfr1peos882ezz0t7an"
 
 // Portfolios
-let portfolios = JSON.parse(JSON.stringify(config.get('PORTFOLIOS')));
+let portfolios = `JSON.parse(JSON.stringify(config.get('PORTFOLIOS')));`
 
 // users
-const users = JSON.parse(JSON.stringify(config.get('USERS')));
+const users = `JSON.parse(JSON.stringify(config.get('USERS')))`;
 
 // Run the server and report out to the logs
 app.listen(port, () => {
