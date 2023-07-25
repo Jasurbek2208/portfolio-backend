@@ -29,41 +29,6 @@ function generateAccessToken(user) {
   return jwt.sign(payload, secretkey, options)
 }
 
-// Update DB json
-function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
-  fs.readFile('config/default.json', 'utf8', (err, jsondata) => {
-    if (err) {
-      console.log(err)
-      return
-    }
-
-    try {
-      const data = JSON.parse(JSON.stringify(JSON.parse(jsondata)))
-
-      if (isupdate === "PUT") {
-        const newdatas = data?.[dbname].filter((item) => item.id !== currentid);
-        data[dbname] = [...newdatas, newdata]
-
-      } else if (isupdate === "DELETE") {
-        data[dbname] = newdata
-
-      } else {
-        data?.[dbname].push(newdata)
-      }
-
-      fs.writeFile('config/default.json', JSON.stringify(data), 'utf8', (error) => {
-        if (error) {
-          console.log("Error in rewriting default.json file: ", error);
-        } else {
-          console.log("Default.json file successfully rewrited!");
-        }
-      })
-
-    } catch (error) {
-      console.log("Error in updating default.json file: ", error);
-    }
-  })
-}
 
 // Run the server and report out to the logs
 app.listen(port, () => {
