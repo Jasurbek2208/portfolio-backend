@@ -11,9 +11,6 @@ const port = 9000;
 app.use(express.json());
 app.use(cors());
 
-// Secret Key for jwt
-const secretkey = config.get('SECRET_KEY')
-
 
 // Run the server and report out to the logs
 app.listen(port, () => {
