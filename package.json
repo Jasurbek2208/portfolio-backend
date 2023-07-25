@@ -2,7 +2,7 @@
   "name": "jasurbeks-free-backend-server",
   "version": "1.0.0",
   "description": "Free backend server with CRUD methods for beginner frontend developers from Jasurbek Shomaqsudov!",
-  "main": "src/index.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
