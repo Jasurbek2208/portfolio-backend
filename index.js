@@ -12,15 +12,13 @@ app.use(express.json());
 app.use(cors());
 
 // Secret Key for jwt
-const secretkey = process.env.SECRET_KEY;
-
-// const secretkey = "kbticr7kmbrvjpm8ditjn4fhryt8pncqj8nvjyn5uox06cs3vf70l1f9ymhi4cvtr0ar28ea4jq2a264bth30dxef0ut2ve99y2dgfr1peos882ezz0t7an"
+const secretkey = config.get('SECRET_KEY')
 
 // Portfolios
-let portfolios = JSON.parse(JSON.stringify(process.env.PORTFOLIOS));
+let portfolios = JSON.parse(JSON.stringify(config.get('PORTFOLIOS')));
 
 // users
-const users = JSON.parse(JSON.stringify(process.env.USERS));
+const users = JSON.parse(JSON.stringify(config.get('USERS')));
 
 // Access Token generator
 function generateAccessToken(user) {
