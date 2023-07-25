@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
-import jwt from "jsonwebtoken"
-import express from "express";
-import config from "config"
-import cors from "cors";
-import fs from "fs";
+const uuidv4 = require("uuid").v4;
+const jwt = require("jsonwebtoken");
+const express = require("express");
+const config = require("config");
+const cors = require("cors");
+const fs = require("fs");
 
 const app = express();
 const port = 9000;
