@@ -41,14 +41,14 @@ function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
       const data = JSON.parse(JSON.stringify(JSON.parse(jsondata)))
 
       if (isupdate === "PUT") {
-        const newdatas = data?.[dbname].filter((item) => item.id !== currentid);
+        const newdatas = data[dbname].filter((item) => item.id !== currentid);
         data[dbname] = [...newdatas, newdata]
 
       } else if (isupdate === "DELETE") {
         data[dbname] = newdata
 
       } else {
-        data?.[dbname].push(newdata)
+        data[dbname].push(newdata)
       }
 
       fs.writeFile('config/default.json', JSON.stringify(data), 'utf8', (error) => {
