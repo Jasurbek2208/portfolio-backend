@@ -12,13 +12,13 @@ app.use(express.json());
 app.use(cors());
 
 // Secret Key for jwt
-const secretkey = config.get('SECRET_KEY')
+// const secretkey = config.get('SECRET_KEY')
 
 // Portfolios
-let portfolios = JSON.parse(JSON.stringify(config.get('PORTFOLIOS')));
+let portfolios = []
 
 // users
-const users = JSON.parse(JSON.stringify(config.get('USERS')));
+const users = []
 
 
 // Login
