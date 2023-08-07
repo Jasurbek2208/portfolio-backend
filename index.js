@@ -2,14 +2,35 @@ const uuidv4 = require("uuid").v4;
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const config = require("config");
+const multer = require("multer");
 const cors = require("cors");
 const fs = require("fs");
 
 const app = express();
 const port = 9000;
 
+// Define storage for multer
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: function (req, file, cb) {
+    cb(null, uuidv4() + "-" + file.originalname);
+  },
+});
+
+// File upload middleware
+const upload = multer({ storage });
+
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
 
 // Secret Key for jwt
 const secretkey = config.get("SECRET_KEY");
@@ -165,13 +186,22 @@ app.get("/auth/userme", (req, res) => {
 
 // GET Portfolios
 app.get("/portfolios", (req, res) => {
+  // Genereting URL for All images in array
+  portfolios.map((item) => {
+    item.img = fs.readFile(item.img.path, (err, data) => {
+      return 'data:image/' + item.img.mimetype.split('/')[1] + ';base64,' + data.toString('base64');
+    })
+  })
+
   res.status(200);
   res.json(portfolios);
 });
 
 // POST Portfolios
-app.post("/portfolio", (req, res) => {
-  const { title, img, project_link, github_link } = req.body;
+app.post("/portfolio", upload.single("file"), (req, res) => {
+  const file = req.file;
+  const { title, project_link, github_link } = req.body;
+
   const token = req.headers.authorization;
   const isValidToken = users.find((user) => user.access_token === token);
 
@@ -187,27 +217,32 @@ app.post("/portfolio", (req, res) => {
     });
   }
 
-  if (!title || !img || !project_link) {
+  if (!title || !file, !project_link) {
     res.status(400);
     return res.json({
-      message: '"title", "img", and "project_link" are required!',
+      message: '"title", "file", and "project_link" are required!',
     });
   }
 
-  const portfolio = {
-    title,
-    img,
-    project_link,
-    github_link: github_link || null,
-    id: uuidv4(),
-  };
+  // Genereting URL for image
+  fs.readFile(file.path, (err, data) => {
+    const imageURL = 'data:image/' + file.mimetype.split('/')[1] + ';base64,' + data.toString('base64');
+    console.log(imageURL);
 
-  updateDB("PORTFOLIOS", portfolio);
-  portfolios.push(portfolio);
+    const portfolio = {
+      title,
+      img: file,
+      project_link,
+      github_link: github_link || null,
+      id: uuidv4(),
+    };
+    updateDB("PORTFOLIOS", portfolio);
+    portfolios.push(portfolio);
 
-  res.status(201);
-  res.json({ message: "Post successfully added!", data: portfolio });
-});
+    res.status(201);
+    res.json({ message: "Post successfully added!", data: { ...portfolio, img: imageURL } });
+  })
+})
 
 // PUT Current Portfolio
 app.put("/portfolio/:id", (req, res) => {
@@ -268,15 +303,15 @@ app.get("/portfolios/:id", (req, res) => {
   const id = req.params.id;
 
   const existingPortfolio = portfolios.find((post) => post.id === id);
-  
+
   if (!existingPortfolio) {
     res.status(403);
     return res.json({ message: "Post not found!" });
   }
-  
-  res.status(200)
-  res.json({ data: existingPortfolio })  
-})
+
+  res.status(200);
+  res.json({ data: existingPortfolio });
+});
 
 // DELETE Portfolio
 app.delete("/portfolio/:id", (req, res) => {
