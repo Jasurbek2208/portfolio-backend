@@ -4,6 +4,7 @@ const express = require("express");
 const config = require("config");
 const multer = require("multer");
 const cors = require("cors");
+const path = require('path');
 const fs = require("fs");
 const app = express();
 const port = 9000;
@@ -96,6 +97,27 @@ function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
     } catch (error) {
       console.log("Error in updating default.json file: ", error);
     }
+  });
+}
+
+// Generating image from url
+function getImage(filename, callback) {
+  const filePath = path.join(__dirname, 'uploads', filename);
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      console.error(err);
+      callback(null); // Error handling
+      return;
+    }
+
+    const ext = path.extname(filename).slice(1);
+    const mimeType = `image/${ext}`;
+
+    const base64Data = data.toString('base64');
+    const base64Image = `data:${mimeType};base64,${base64Data}`;
+
+    callback(base64Image);
   });
 }
 
@@ -221,21 +243,14 @@ app.get("/portfolios", (req, res) => {
   const newPortfolios = [];
 
   portfolios.forEach((item) => {
-    // Genereting URL for All images in array
-    const imageUrl = `${req.protocol}://${req.get("host")}/${item.img.path}`;
-    newPortfolios.push({ ...item, img: imageUrl });
-  });
+    // Generating URL for all images in the array
+    getImage(item.img.filename, (base64Image) => {
+      newPortfolios.push({ ...item, img: base64Image });
 
-  res.status(200).json(newPortfolios);
-});
-
-app.get("/uploads/:url", (req, res) => {
-  const item = req.params.url;
-
-  fs.readFile(`uploads/${item}`, (err, data) => {
-    res
-      .status(200)
-      .json("data:image/" + item + ";base64," + data.toString("base64"));
+      if (newPortfolios.length === portfolios.length) {
+        res.status(200).json(newPortfolios);
+      }
+    });
   });
 });
 
@@ -383,13 +398,12 @@ app.get("/portfolios/:id", (req, res) => {
     return res.json({ message: "Post not found!" });
   }
 
-  // Genereting URL for All images in array
-  const imageUrl = `${req.protocol}://${req.get("host")}/${existingPortfolio.img.path
-    }`;
+  // Generating URL for all images in the array
+  getImage(existingPortfolio.img.filename, (base64Image) => {
+    const newPortfolio = { ...existingPortfolio, img: base64Image }
 
-  res.status(200);
-
-  res.json({ data: { ...existingPortfolio, img: imageUrl } });
+    res.status(200).json({ data: newPortfolio });
+  });
 });
 
 // DELETE Portfolio
