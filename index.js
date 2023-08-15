@@ -5,13 +5,13 @@ const config = require("config");
 const multer = require("multer");
 const cors = require("cors");
 const fs = require("fs");
-
 const app = express();
 const port = 9000;
 
 // Define storage for multer
 const storage = multer.diskStorage({
   destination: "uploads/",
+
   filename: function (req, file, cb) {
     cb(null, uuidv4() + "-" + file.originalname);
   },
@@ -21,14 +21,20 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.use(express.json());
+
 app.use(cors());
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
+
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+
   res.header(
     "Access-Control-Allow-Headers",
+
     "Origin, X-Requested-With, Content-Type, Accept"
   );
+
   next();
 });
 
@@ -44,7 +50,9 @@ const users = JSON.parse(JSON.stringify(config.get("USERS")));
 // Access Token generator
 function generateAccessToken(user) {
   const payload = { ...user };
+
   const options = { expiresIn: "1h" };
+
   return jwt.sign(payload, secretkey, options);
 }
 
@@ -53,6 +61,7 @@ function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
   fs.readFile("config/default.json", "utf8", (err, jsondata) => {
     if (err) {
       console.log(err);
+
       return;
     }
 
@@ -71,8 +80,11 @@ function updateDB(dbname, newdata, isupdate = "POST", currentid = 0) {
 
       fs.writeFile(
         "config/default.json",
+
         JSON.stringify(data),
+
         "utf8",
+
         (error) => {
           if (error) {
             console.log("Error in rewriting default.json file: ", error);
@@ -93,11 +105,13 @@ app.post("/auth/register", (req, res) => {
 
   if (!name || !password) {
     res.status(400);
+
     return res.json({ message: '"name" and "password" are required!' });
   }
 
   if (typeof name !== "string" || typeof password !== "string") {
     res.status(400);
+
     return res.json({
       message: "The type of name and password must be String!",
     });
@@ -105,6 +119,7 @@ app.post("/auth/register", (req, res) => {
 
   if (users.find((user) => user.name === name)) {
     res.status(400);
+
     return res.json({ message: "This username is already registered." });
   }
 
@@ -115,6 +130,7 @@ app.post("/auth/register", (req, res) => {
     password.length > 12
   ) {
     res.status(401);
+
     return res.json({
       message:
         "Invalid requirement. 'name' must be between 4 and 16 characters. The 'password' must be between 4 and 12 characters long.",
@@ -123,21 +139,29 @@ app.post("/auth/register", (req, res) => {
 
   const user = {
     name,
+
     password,
+
     _id: String(new Date().getTime()),
+
     access_token: null,
   };
 
   const access_token = generateAccessToken(user);
+
   user.access_token = access_token;
 
   users.push(user);
+
   updateDB("USERS", user);
 
   res.status(201);
+
   res.json({
     message: "You have successfully registered.",
+
     user: { _id: user._id, name: user.name },
+
     access_token: user.access_token,
   });
 });
@@ -152,13 +176,17 @@ app.post("/auth/login", (req, res) => {
 
   if (user) {
     res.status(200);
+
     res.json({
       message: "Success",
+
       user: { _id: user._id, name: user.name },
+
       access_token: user.access_token,
     });
   } else {
     res.status(401);
+
     res.json({ message: "Invalid login or password." });
   }
 });
@@ -169,56 +197,75 @@ app.get("/auth/userme", (req, res) => {
 
   if (!token) {
     res.status(400);
+
     return res.json({ message: "Token not found in request headers." });
   }
 
   const currentUser = users.find((user) => user.access_token === token);
+
   if (!currentUser) {
     res.status(401);
+
     return res.json({
       message: "Unauthorized. Token not found in the database.",
     });
   }
 
   res.status(200);
+
   return res.json({ user: { _id: currentUser._id, name: currentUser.name } });
 });
 
 // GET Portfolios
 app.get("/portfolios", (req, res) => {
-  // Genereting URL for All images in array
-  portfolios.map((item) => {
-    item.img = fs.readFile(item.img.path, (err, data) => {
-      return 'data:image/' + item.img.mimetype.split('/')[1] + ';base64,' + data.toString('base64');
-    })
-  })
+  const newPortfolios = [];
 
-  res.status(200);
-  res.json(portfolios);
+  portfolios.forEach((item) => {
+    // Genereting URL for All images in array
+    const imageUrl = `${req.protocol}://${req.get("host")}/${item.img.path}`;
+    newPortfolios.push({ ...item, img: imageUrl });
+  });
+
+  res.status(200).json(newPortfolios);
+});
+
+app.get("/uploads/:url", (req, res) => {
+  const item = req.params.url;
+
+  fs.readFile(`uploads/${item}`, (err, data) => {
+    res
+      .status(200)
+      .json("data:image/" + item + ";base64," + data.toString("base64"));
+  });
 });
 
 // POST Portfolios
 app.post("/portfolio", upload.single("file"), (req, res) => {
   const file = req.file;
+
   const { title, project_link, github_link } = req.body;
 
   const token = req.headers.authorization;
+
   const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
+
     return res.json({ message: "Token not found in request headers." });
   }
 
   if (!isValidToken) {
     res.status(401);
+
     return res.json({
       message: "Unauthorized. Token not found in the database.",
     });
   }
 
-  if (!title || !file, !project_link) {
+  if ((!title || !file, !project_link)) {
     res.status(400);
+
     return res.json({
       message: '"title", "file", and "project_link" are required!',
     });
@@ -226,39 +273,56 @@ app.post("/portfolio", upload.single("file"), (req, res) => {
 
   // Genereting URL for image
   fs.readFile(file.path, (err, data) => {
-    const imageURL = 'data:image/' + file.mimetype.split('/')[1] + ';base64,' + data.toString('base64');
-    console.log(imageURL);
+    const imageURL =
+      "data:image/" +
+      file.mimetype.split("/")[1] +
+      ";base64," +
+      data.toString("base64");
 
     const portfolio = {
       title,
+
       img: file,
+
       project_link,
+
       github_link: github_link || null,
+
       id: uuidv4(),
     };
+
     updateDB("PORTFOLIOS", portfolio);
+
     portfolios.push(portfolio);
 
     res.status(201);
-    res.json({ message: "Post successfully added!", data: { ...portfolio, img: imageURL } });
-  })
-})
+
+    res.json({
+      message: "Post successfully added!",
+      data: { ...portfolio, img: imageURL },
+    });
+  });
+});
 
 // PUT Current Portfolio
 app.put("/portfolio/:id", (req, res) => {
   const id = req.params.id;
+
   const { title, img, project_link, github_link } = req.body;
 
   const token = req.headers.authorization;
+
   const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
+
     return res.json({ message: "Token not found in request headers." });
   }
 
   if (!isValidToken) {
     res.status(401);
+
     return res.json({
       message: "Unauthorized. Token not found in the database.",
     });
@@ -266,17 +330,21 @@ app.put("/portfolio/:id", (req, res) => {
 
   if (!id) {
     res.status(404);
+
     return res.json({ message: 'Invalid "id"!' });
   }
 
   const existingPortfolio = portfolios.find((post) => post.id === id);
+
   if (!existingPortfolio) {
     res.status(403);
+
     return res.json({ message: `Post not found!` });
   }
 
   if (!title || !img || !project_link) {
     res.status(400);
+
     return res.json({
       message: '"title", "img", and "project_link" are required!',
     });
@@ -284,9 +352,13 @@ app.put("/portfolio/:id", (req, res) => {
 
   const portfolio = {
     title,
+
     img,
+
     project_link,
+
     github_link: github_link || null,
+
     id,
   };
 
@@ -295,6 +367,7 @@ app.put("/portfolio/:id", (req, res) => {
   updateDB("PORTFOLIOS", portfolio, "PUT", id);
 
   res.status(200);
+
   res.json({ message: "Post successfully edited!", data: portfolio });
 });
 
@@ -306,11 +379,17 @@ app.get("/portfolios/:id", (req, res) => {
 
   if (!existingPortfolio) {
     res.status(403);
+
     return res.json({ message: "Post not found!" });
   }
 
+  // Genereting URL for All images in array
+  const imageUrl = `${req.protocol}://${req.get("host")}/${existingPortfolio.img.path
+    }`;
+
   res.status(200);
-  res.json({ data: existingPortfolio });
+
+  res.json({ data: { ...existingPortfolio, img: imageUrl } });
 });
 
 // DELETE Portfolio
@@ -318,15 +397,18 @@ app.delete("/portfolio/:id", (req, res) => {
   const id = req.params.id;
 
   const token = req.headers.authorization;
+
   const isValidToken = users.find((user) => user.access_token === token);
 
   if (!token) {
     res.status(400);
+
     return res.json({ message: "Token not found in request headers." });
   }
 
   if (!isValidToken) {
     res.status(401);
+
     return res.json({
       message: "Unauthorized. Token not found in the database.",
     });
@@ -334,16 +416,20 @@ app.delete("/portfolio/:id", (req, res) => {
 
   if (!id) {
     res.status(404);
+
     return res.json({ message: 'Invalid "id"!' });
   }
 
   const existingPortfolio = portfolios.find((post) => post.id === id);
+
   if (!existingPortfolio) {
     res.status(403);
+
     return res.json({ message: "Post not found!" });
   }
 
   portfolios = portfolios.filter((post) => post.id !== id);
+
   updateDB("PORTFOLIOS", portfolios, "DELETE", id);
 
   res.status(204).json({ message: "Post successfully deleted!" });
